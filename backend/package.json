@@ -1,0 +1,49 @@
+{
+  "name": "healthcare-crm-backend",
+  "version": "1.0.0",
+  "description": "Serverless backend API for healthcare CRM patient notes management",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "deploy": "serverless deploy",
+    "deploy:dev": "serverless deploy --stage dev",
+    "deploy:prod": "serverless deploy --stage prod",
+    "offline": "serverless offline",
+    "test": "jest",
+    "test:coverage": "jest --coverage"
+  },
+  "keywords": [
+    "healthcare",
+    "crm",
+    "serverless",
+    "aws",
+    "lambda",
+    "dynamodb"
+  ],
+  "author": "",
+  "license": "ISC",
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": ["**/tests/**/*.test.ts"],
+    "transform": {
+      "^.+\\.tsx?$": ["ts-jest", { "tsconfig": "tsconfig.test.json" }]
+    }
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.700.0",
+    "@aws-sdk/lib-dynamodb": "^3.700.0",
+    "uuid": "^11.0.3"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.10.2",
+    "@types/uuid": "^10.0.0",
+    "jest": "^30.3.0",
+    "serverless": "^4.4.7",
+    "serverless-offline": "^14.3.3",
+    "ts-jest": "^29.4.6",
+    "typescript": "^5.7.2"
+  }
+}

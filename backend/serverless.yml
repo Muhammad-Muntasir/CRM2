@@ -1,0 +1,120 @@
+service: healthcare-crm
+frameworkVersion: "3"
+
+plugins:
+  - serverless-esbuild
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  environment:
+    NOTES_TABLE: !Ref NotesTable
+    PATIENTS_TABLE: !Ref PatientsTable
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            - !GetAtt NotesTable.Arn
+            - !Sub "${NotesTable.Arn}/index/patientId-index"
+            - !GetAtt PatientsTable.Arn
+
+functions:
+  createNote:
+    handler: backend/src/handlers/notes.createNoteHandler
+    events:
+      - httpApi:
+          method: POST
+          path: /notes
+          cors: true
+
+  getNotes:
+    handler: backend/src/handlers/notes.getNotesHandler
+    events:
+      - httpApi:
+          method: GET
+          path: /patients/{patientId}/notes
+          cors: true
+
+  deleteNote:
+    handler: backend/src/handlers/notes.deleteNoteHandler
+    events:
+      - httpApi:
+          method: DELETE
+          path: /notes/{noteId}
+          cors: true
+
+  updateNote:
+    handler: backend/src/handlers/notes.updateNoteHandler
+    events:
+      - httpApi:
+          method: PUT
+          path: /notes/{noteId}
+          cors: true
+
+  listPatients:
+    handler: backend/src/handlers/patients.listHandler
+    events:
+      - httpApi:
+          method: GET
+          path: /patients
+          cors: true
+
+  createPatient:
+    handler: backend/src/handlers/patients.createHandler
+    events:
+      - httpApi:
+          method: POST
+          path: /patients
+          cors: true
+
+  deletePatient:
+    handler: backend/src/handlers/patients.deleteHandler
+    events:
+      - httpApi:
+          method: DELETE
+          path: /patients/{patientId}
+          cors: true
+
+resources:
+  Resources:
+    NotesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-notes-${sls:stage}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: noteId
+            AttributeType: S
+          - AttributeName: patientId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: noteId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: patientId-index
+            KeySchema:
+              - AttributeName: patientId
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    PatientsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-patients-${sls:stage}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: patientId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: patientId
+            KeyType: HASH
