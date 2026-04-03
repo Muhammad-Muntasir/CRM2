@@ -1,7 +1,7 @@
 {
   "name": "healthcare-crm",
   "version": "1.0.0",
-  "description": "Healthcare CRM - Patient Notes Management",
+  "description": "Healthcare CRM - Patients Notes Management",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
