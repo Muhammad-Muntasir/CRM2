@@ -1,20 +1,20 @@
 import { useState } from 'react';
 import Login from './components/Login.jsx';
 import Dashboard from './components/Dashboard.jsx';
+import { signOut } from './services/auth.js';
 
 export default function App() {
   const [user, setUser] = useState(() => {
-    const saved = sessionStorage.getItem('crm_user');
+    const saved = sessionStorage.getItem('crm_session');
     return saved ? JSON.parse(saved) : null;
   });
 
-  function handleLogin(userData) {
-    sessionStorage.setItem('crm_user', JSON.stringify(userData));
-    setUser(userData);
+  function handleLogin(session) {
+    setUser(session);
   }
 
   function handleLogout() {
-    sessionStorage.removeItem('crm_user');
+    signOut();
     setUser(null);
   }
 

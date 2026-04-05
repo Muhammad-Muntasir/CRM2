@@ -38,9 +38,9 @@ export default function Sidebar({ patients, selectedId, onSelect, onAddPatient, 
 
       {/* User info */}
       <div className="sidebar-user">
-        <span className="sidebar-user-avatar">{user.displayName[0]}</span>
+        <span className="sidebar-user-avatar">{(user.email || user.displayName || 'U')[0].toUpperCase()}</span>
         <div className="sidebar-user-info">
-          <span className="sidebar-user-name">{user.displayName}</span>
+          <span className="sidebar-user-name">{user.email || user.displayName}</span>
           <span className="sidebar-user-role">Clinician</span>
         </div>
         <button className="btn-icon" onClick={onLogout} title="Sign out">⏻</button>

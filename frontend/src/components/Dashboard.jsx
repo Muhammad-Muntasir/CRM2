@@ -15,32 +15,32 @@ export default function Dashboard({ user, onLogout }) {
   // Load patients on mount
   useEffect(() => {
     setPatientsLoading(true);
-    getPatients(user.username)
+    getPatients(user.idToken)
       .then(setPatients)
       .catch(() => {})
       .finally(() => setPatientsLoading(false));
-  }, [user.username]);
+  }, [user.idToken]);
 
   // Load notes when selected patient changes
   useEffect(() => {
     if (!selectedPatient) { setNotes([]); return; }
     setNotesLoading(true);
     setNotesError(null);
-    getNotes(selectedPatient.patientId, user.username)
+    getNotes(selectedPatient.patientId, user.idToken)
       .then(setNotes)
       .catch(err => setNotesError(err.message || 'Failed to load notes.'))
       .finally(() => setNotesLoading(false));
-  }, [selectedPatient, user.username]);
+  }, [selectedPatient, user.idToken]);
 
   async function handleAddPatient(name) {
-    const patient = await createPatient(name, user.username);
+    const patient = await createPatient(name, user.idToken);
     setPatients(prev => [...prev, patient].sort((a, b) => a.name.localeCompare(b.name)));
   }
 
   async function handleDeletePatient(patientId) {
     if (!window.confirm('Delete this patient and ALL their notes? This cannot be undone.')) return;
     try {
-      await deletePatient(patientId, user.username);
+      await deletePatient(patientId, user.idToken);
       setPatients(prev => prev.filter(p => p.patientId !== patientId));
       if (selectedPatient?.patientId === patientId) {
         setSelectedPatient(null);
@@ -82,7 +82,7 @@ export default function Dashboard({ user, onLogout }) {
 
             <NoteForm
               patientId={selectedPatient.patientId}
-              userId={user.username}
+              userId={user.idToken}
               onNoteCreated={note => setNotes(prev => [note, ...prev])}
             />
 
@@ -95,7 +95,7 @@ export default function Dashboard({ user, onLogout }) {
                 notes={notes}
                 loading={notesLoading}
                 error={notesError}
-                userId={user.username}
+                userId={user.idToken}
                 onNotesChange={setNotes}
               />
             </div>
