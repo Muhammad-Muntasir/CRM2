@@ -132,7 +132,7 @@ export class HealthcareCrmStack extends cdk.Stack {
     };
 
     const lambdaDefaults = {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_22_X,
       role: lambdaRole,
       environment: lambdaEnv,
       timeout: cdk.Duration.seconds(30),
