@@ -171,3 +171,18 @@ export async function deletePatient(patientId: string): Promise<void> {
   await deletePatientNotes(patientId);
   await dynamoDbClient.send(new DeleteCommand({ TableName: PATIENTS_TABLE, Key: { patientId } }));
 }
+
+export async function updatePatient(patientId: string, name: string): Promise<Patient | null> {
+  const result = await dynamoDbClient.send(
+    new UpdateCommand({
+      TableName: PATIENTS_TABLE,
+      Key: { patientId },
+      UpdateExpression: 'SET #name = :name',
+      ExpressionAttributeNames: { '#name': 'name' },
+      ExpressionAttributeValues: { ':name': name },
+      ConditionExpression: 'attribute_exists(patientId)',
+      ReturnValues: 'ALL_NEW',
+    })
+  );
+  return (result.Attributes as Patient) ?? null;
+}

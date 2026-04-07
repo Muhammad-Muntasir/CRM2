@@ -73,3 +73,11 @@ export async function deletePatient(patientId, idToken) {
     headers: getHeaders(idToken),
   }));
 }
+
+export async function updatePatient(patientId, name, idToken) {
+  return handleResponse(await fetch(`${API_URL}/patients/${patientId}`, {
+    method: 'PUT',
+    headers: getHeaders(idToken),
+    body: JSON.stringify({ name }),
+  }));
+}

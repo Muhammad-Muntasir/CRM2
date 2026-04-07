@@ -1,11 +1,15 @@
 import { useState } from 'react';
 
-export default function Sidebar({ patients, selectedId, onSelect, onAddPatient, onDeletePatient, loading, user, onLogout }) {
+export default function Sidebar({ patients, selectedId, onSelect, onAddPatient, onDeletePatient, onUpdatePatient, loading, user, onLogout }) {
   const [search, setSearch] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [newName, setNewName] = useState('');
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editError, setEditError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const filtered = patients.filter(p =>
     p.patientId.toLowerCase().includes(search.toLowerCase()) ||
@@ -25,6 +29,27 @@ export default function Sidebar({ patients, selectedId, onSelect, onAddPatient, 
       setAddError(err.message || 'Failed to add patient.');
     } finally {
       setAdding(false);
+    }
+  }
+
+  function startEdit(p) {
+    setEditingId(p.patientId);
+    setEditName(p.name);
+    setEditError('');
+  }
+
+  async function handleEdit(e, patientId) {
+    e.preventDefault();
+    if (!editName.trim()) { setEditError('Name is required.'); return; }
+    setSaving(true);
+    setEditError('');
+    try {
+      await onUpdatePatient(patientId, editName.trim());
+      setEditingId(null);
+    } catch (err) {
+      setEditError(err.message || 'Failed to update.');
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -95,20 +120,37 @@ export default function Sidebar({ patients, selectedId, onSelect, onAddPatient, 
                 key={p.patientId}
                 className={`patient-item ${selectedId === p.patientId ? 'active' : ''}`}
               >
-                <button className="patient-item-btn" onClick={() => onSelect(p)}>
-                  <span className="patient-avatar">{p.name[0].toUpperCase()}</span>
-                  <div className="patient-info">
-                    <span className="patient-name">{p.name}</span>
-                    <span className="patient-id">{p.patientId}</span>
-                  </div>
-                </button>
-                <button
-                  className="btn-icon-danger"
-                  onClick={() => onDeletePatient(p.patientId)}
-                  title="Delete patient"
-                >
-                  🗑
-                </button>
+                {editingId === p.patientId ? (
+                  <form onSubmit={e => handleEdit(e, p.patientId)} className="edit-patient-form">
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={e => setEditName(e.target.value)}
+                      autoFocus
+                    />
+                    {editError && <p className="form-error">{editError}</p>}
+                    <div className="add-patient-actions">
+                      <button type="submit" className="btn-primary btn-sm" disabled={saving}>
+                        {saving ? 'Saving...' : 'Save'}
+                      </button>
+                      <button type="button" className="btn-ghost btn-sm" onClick={() => setEditingId(null)}>
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <>
+                    <button className="patient-item-btn" onClick={() => onSelect(p)}>
+                      <span className="patient-avatar">{p.name[0].toUpperCase()}</span>
+                      <div className="patient-info">
+                        <span className="patient-name">{p.name}</span>
+                        <span className="patient-id">{p.patientId}</span>
+                      </div>
+                    </button>
+                    <button className="btn-icon-sm" onClick={() => startEdit(p)} title="Edit name">✏️</button>
+                    <button className="btn-icon-danger" onClick={() => onDeletePatient(p.patientId)} title="Delete patient">🗑</button>
+                  </>
+                )}
               </li>
             ))}
           </ul>

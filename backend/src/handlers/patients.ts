@@ -13,7 +13,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { randomUUID } from 'crypto';
 import { extractUserId } from '../utils/auth';
-import { createPatient, getAllPatients, deletePatient } from '../services/noteService';
+import { createPatient, getAllPatients, deletePatient, updatePatient } from '../services/noteService';
 import { success, error } from '../utils/response';
 
 // ─── GET /patients ────────────────────────────────────────────────────────────
@@ -60,6 +60,37 @@ export async function createHandler(event: APIGatewayProxyEvent): Promise<APIGat
     return success(201, patient);
   } catch (err) {
     console.error('createHandler error:', err);
+    return error(500, 'Internal server error');
+  }
+}
+
+// ─── PUT /patients/{patientId} ────────────────────────────────────────────────
+
+/**
+ * Updates a patient's name.
+ * Body: { name }
+ */
+export async function updateHandler(event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> {
+  try {
+    const userId = extractUserId(event);
+    if (!userId) return error(401, 'Unauthorized');
+
+    const patientId = event.pathParameters?.patientId;
+    if (!patientId) return error(400, 'patientId is required');
+
+    let body: { name?: string } | null = null;
+    try { body = event.body ? JSON.parse(event.body) : null; }
+    catch { return error(400, 'Invalid JSON in request body'); }
+
+    const name = body?.name?.trim();
+    if (!name) return error(400, 'name is required');
+
+    const updated = await updatePatient(patientId, name);
+    if (!updated) return error(404, 'Patient not found');
+
+    return success(200, updated);
+  } catch (err) {
+    console.error('updateHandler error:', err);
     return error(500, 'Internal server error');
   }
 }

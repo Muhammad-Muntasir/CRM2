@@ -206,6 +206,14 @@ export class HealthcareCrmStack extends cdk.Stack {
       logGroup: logGroup('deletePatient'),
     });
 
+    const updatePatientFunc = new lambda.Function(this, 'UpdatePatientFunc', {
+      ...lambdaDefaults,
+      functionName: 'healthcare-crm-updatePatient',
+      handler: 'dist/src/handlers/patients.updateHandler',
+      description: 'PUT /patients/{patientId}',
+      logGroup: logGroup('updatePatient'),
+    });
+
     // ─── IAM Role for API Gateway CloudWatch Logging ──────────────────────────
 
     const apiGatewayCloudWatchRole = new iam.Role(this, 'ApiGatewayCloudWatchRole', {
@@ -280,6 +288,7 @@ export class HealthcareCrmStack extends cdk.Stack {
 
     const patientById = patients.addResource('{patientId}');
     patientById.addMethod('DELETE', new apigateway.LambdaIntegration(deletePatientFunc), authOptions);
+    patientById.addMethod('PUT', new apigateway.LambdaIntegration(updatePatientFunc), authOptions);
 
     const patientNotes = patientById.addResource('notes');
     patientNotes.addMethod('GET', new apigateway.LambdaIntegration(getNotesFunc), authOptions);

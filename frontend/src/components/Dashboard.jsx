@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar.jsx';
 import NoteForm from './NoteForm.jsx';
 import NotesList from './NotesList.jsx';
-import { getNotes, getPatients, createPatient, deletePatient } from '../services/api.js';
+import { getNotes, getPatients, createPatient, deletePatient, updatePatient } from '../services/api.js';
 
 export default function Dashboard({ user, onLogout }) {
   const [patients, setPatients] = useState([]);
@@ -51,6 +51,12 @@ export default function Dashboard({ user, onLogout }) {
     }
   }
 
+  async function handleUpdatePatient(patientId, name) {
+    const updated = await updatePatient(patientId, name, user.idToken);
+    setPatients(prev => prev.map(p => p.patientId === patientId ? updated : p).sort((a, b) => a.name.localeCompare(b.name)));
+    if (selectedPatient?.patientId === patientId) setSelectedPatient(updated);
+  }
+
   return (
     <div className="dashboard">
       <Sidebar
@@ -59,6 +65,7 @@ export default function Dashboard({ user, onLogout }) {
         onSelect={setSelectedPatient}
         onAddPatient={handleAddPatient}
         onDeletePatient={handleDeletePatient}
+        onUpdatePatient={handleUpdatePatient}
         loading={patientsLoading}
         user={user}
         onLogout={onLogout}
