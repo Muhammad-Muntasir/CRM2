@@ -140,78 +140,18 @@ export class HealthcareCrmStack extends cdk.Stack {
       code: backendCode,
     };
 
-    // Helper to create a log group with 1-week retention per function
-    const logGroup = (name: string) =>
-      new logs.LogGroup(this, `${name}LogGroup`, {
-        logGroupName: `/aws/lambda/healthcare-crm-${name}`,
+    // ─── Single Lambda Function ───────────────────────────────────────────────
+
+    const apiHandler = new lambda.Function(this, 'ApiHandler', {
+      ...lambdaDefaults,
+      functionName: 'healthcare-crm-api',
+      handler: 'dist/src/handlers/index.handler',
+      description: 'Single Lambda handler for all Healthcare CRM API routes',
+      logGroup: new logs.LogGroup(this, 'ApiHandlerLogGroup', {
+        logGroupName: '/aws/lambda/healthcare-crm-api',
         retention: logs.RetentionDays.ONE_WEEK,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
-      });
-
-    // ─── Lambda Functions ─────────────────────────────────────────────────────
-
-    const createNoteFunc = new lambda.Function(this, 'CreateNoteFunc', {
-      ...lambdaDefaults,
-      functionName: 'healthcare-crm-createNote',
-      handler: 'dist/src/handlers/notes.createNoteHandler',
-      description: 'POST /notes — create a patient note',
-      logGroup: logGroup('createNote'),
-    });
-
-    const getNotesFunc = new lambda.Function(this, 'GetNotesFunc', {
-      ...lambdaDefaults,
-      functionName: 'healthcare-crm-getNotes',
-      handler: 'dist/src/handlers/notes.getNotesHandler',
-      description: 'GET /patients/{patientId}/notes',
-      logGroup: logGroup('getNotes'),
-    });
-
-    const updateNoteFunc = new lambda.Function(this, 'UpdateNoteFunc', {
-      ...lambdaDefaults,
-      functionName: 'healthcare-crm-updateNote',
-      handler: 'dist/src/handlers/notes.updateNoteHandler',
-      description: 'PUT /notes/{noteId}',
-      logGroup: logGroup('updateNote'),
-    });
-
-    const deleteNoteFunc = new lambda.Function(this, 'DeleteNoteFunc', {
-      ...lambdaDefaults,
-      functionName: 'healthcare-crm-deleteNote',
-      handler: 'dist/src/handlers/notes.deleteNoteHandler',
-      description: 'DELETE /notes/{noteId}',
-      logGroup: logGroup('deleteNote'),
-    });
-
-    const listPatientsFunc = new lambda.Function(this, 'ListPatientsFunc', {
-      ...lambdaDefaults,
-      functionName: 'healthcare-crm-listPatients',
-      handler: 'dist/src/handlers/patients.listHandler',
-      description: 'GET /patients',
-      logGroup: logGroup('listPatients'),
-    });
-
-    const createPatientFunc = new lambda.Function(this, 'CreatePatientFunc', {
-      ...lambdaDefaults,
-      functionName: 'healthcare-crm-createPatient',
-      handler: 'dist/src/handlers/patients.createHandler',
-      description: 'POST /patients',
-      logGroup: logGroup('createPatient'),
-    });
-
-    const deletePatientFunc = new lambda.Function(this, 'DeletePatientFunc', {
-      ...lambdaDefaults,
-      functionName: 'healthcare-crm-deletePatient',
-      handler: 'dist/src/handlers/patients.deleteHandler',
-      description: 'DELETE /patients/{patientId}',
-      logGroup: logGroup('deletePatient'),
-    });
-
-    const updatePatientFunc = new lambda.Function(this, 'UpdatePatientFunc', {
-      ...lambdaDefaults,
-      functionName: 'healthcare-crm-updatePatient',
-      handler: 'dist/src/handlers/patients.updateHandler',
-      description: 'PUT /patients/{patientId}',
-      logGroup: logGroup('updatePatient'),
+      }),
     });
 
     // ─── IAM Role for API Gateway CloudWatch Logging ──────────────────────────
@@ -273,25 +213,27 @@ export class HealthcareCrmStack extends cdk.Stack {
 
     // ─── API Routes ───────────────────────────────────────────────────────────
 
+    const integration = new apigateway.LambdaIntegration(apiHandler);
+
     // /notes
     const notes = api.root.addResource('notes');
-    notes.addMethod('POST', new apigateway.LambdaIntegration(createNoteFunc), authOptions);
+    notes.addMethod('POST', integration, authOptions);
 
     const noteById = notes.addResource('{noteId}');
-    noteById.addMethod('PUT', new apigateway.LambdaIntegration(updateNoteFunc), authOptions);
-    noteById.addMethod('DELETE', new apigateway.LambdaIntegration(deleteNoteFunc), authOptions);
+    noteById.addMethod('PUT', integration, authOptions);
+    noteById.addMethod('DELETE', integration, authOptions);
 
     // /patients
     const patients = api.root.addResource('patients');
-    patients.addMethod('GET', new apigateway.LambdaIntegration(listPatientsFunc), authOptions);
-    patients.addMethod('POST', new apigateway.LambdaIntegration(createPatientFunc), authOptions);
+    patients.addMethod('GET', integration, authOptions);
+    patients.addMethod('POST', integration, authOptions);
 
     const patientById = patients.addResource('{patientId}');
-    patientById.addMethod('DELETE', new apigateway.LambdaIntegration(deletePatientFunc), authOptions);
-    patientById.addMethod('PUT', new apigateway.LambdaIntegration(updatePatientFunc), authOptions);
+    patientById.addMethod('DELETE', integration, authOptions);
+    patientById.addMethod('PUT', integration, authOptions);
 
     const patientNotes = patientById.addResource('notes');
-    patientNotes.addMethod('GET', new apigateway.LambdaIntegration(getNotesFunc), authOptions);
+    patientNotes.addMethod('GET', integration, authOptions);
 
     // ─── Stack Outputs ────────────────────────────────────────────────────────
 

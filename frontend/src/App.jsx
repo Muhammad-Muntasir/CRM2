@@ -47,4 +47,5 @@ export default function App() {
 
   // Otherwise show the main dashboard, passing user session and logout handler
   return <Dashboard user={user} onLogout={handleLogout} />;
+  
 }
